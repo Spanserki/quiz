@@ -1,5 +1,6 @@
 
 import { prisma } from '@/lib/prisma';
+import { differenceInSeconds } from 'date-fns';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { createRouter } from "next-connect";
 
@@ -8,10 +9,8 @@ const router = createRouter<NextApiRequest, NextApiResponse>();
 router.get(async (req, res) => {
     try {
         const response = await prisma.quiz.findMany({
-            orderBy: {
-                score: 'desc'
-            },
-            include: {user: true}
+            orderBy: [{ score: 'desc', }, { time: 'asc', }],
+            include: { user: true }
         })
         res.status(200).json(response)
     } catch (error) {
@@ -23,7 +22,7 @@ router.post(async (req, res) => {
     const { id, values, startTimeQuiz } = req.body;
     const newDate = new Date(startTimeQuiz)
     const startquiz = newDate.toISOString()
-    console.log(startquiz)
+    const time = differenceInSeconds(new Date(), new Date(startquiz));
     try {
         const filteredResponses = values.response.filter((item: any) => item != null);
         let hits = 0
@@ -36,6 +35,7 @@ router.post(async (req, res) => {
         const response = await prisma.quiz.create({
             data: {
                 score,
+                time: Number(time),
                 hits,
                 mistakes,
                 endquiz: new Date(),

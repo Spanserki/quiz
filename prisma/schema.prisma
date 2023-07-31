@@ -21,6 +21,7 @@ model Quiz {
   user      User     @relation(fields: [userId], references: [id])
   userId    String
   score     Int
+  time      Int
   hits      Int
   mistakes  Int
   startquiz DateTime

@@ -1,33 +1,33 @@
 import { api } from "@/lib/api";
 import { queryClient } from "@/lib/queryclient";
+import { questions } from "@/utils/questions";
 import {
     Button,
     Flex,
     FormControl,
     Heading,
+    Icon,
+    IconButton,
     Progress,
     Radio,
     RadioGroup,
     Stack,
-    Tab,
-    TabList,
-    TabPanel,
-    TabPanels,
-    Tabs,
-    useToast,
-    Icon
+    useToast
 } from "@chakra-ui/react";
+import { motion } from "framer-motion";
 import { useRouter } from "next/router";
 import { destroyCookie, parseCookies } from 'nookies';
 import { useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
-import { BsQuestionDiamondFill } from 'react-icons/bs'
+import { MdKeyboardBackspace, MdOutlineNavigateNext } from 'react-icons/md';
 
-export default function Registro() {
+export default function Multistep() {
+    const [multistep, setmultistep] = useState(1)
     const toast = useToast();
     const router = useRouter();
     const [isLoadingButton, setIsLoadingButton] = useState(false)
-    const [progressBar, setProgressbar] = useState(1)
+    const [progressBar, setProgressbar] = useState(0)
+    let progressBarState = progressBar * 33.3
     const [id, setId] = useState('')
     const [startTimeQuiz, setTimeStartQuiz] = useState('')
     useEffect(() => {
@@ -95,93 +95,109 @@ export default function Registro() {
     }
     return (
         <Flex
-            as='form'
-            onSubmit={handleSubmit(handleAnswers)}
             flexDir='column'
             w='100%'
             h='100vh'
             align='center'
             justify='center'
-            gap={10}
-            bgColor='gray.900'
-            color='gray.100'
         >
-            <Tabs colorScheme="pink" w='100%' maxW='2xl' gap={6} variant="soft-rounded">
-                <TabPanels minW='2xl' maxW='2xl' minH={200} maxH={400} bgColor='gray.800' rounded='md'>
-                    <TabPanel>
-                        <Stack spacing={6}>
-                            <Heading>
-                                Qual é a capital do Brasil?
-                            </Heading>
-                            <FormControl>
-                                <RadioGroup onClick={() => setProgressbar(progressBar > 33 ? progressBar : 33)}>
-                                    <Stack>
-                                        <Radio value='1' {...register('response.1.answer')}>São Paulo</Radio>
-                                        <Radio value='2' {...register('response.1.answer')}>Rio de Janeiro</Radio>
-                                        <Radio value='10' {...register('response.1.answer')}>Brasília</Radio>
+            {questions.map(item => {
+                return (
+                    <>
+                        {multistep === item.multistepSelected && (
+                            <motion.div
+                                key={item.id}
+                                initial={{ translateX: 20, opacity: 0 }}
+                                whileInView={{ translateX: 0, transitionDuration: '1.5s', opacity: 1 }}
+                                viewport={{ once: false }}
+                            >
+                                <Flex
+                                    as='form'
+                                    onSubmit={handleSubmit(handleAnswers)}
+                                    position='relative'
+                                    flexDir='column'
+                                    bgColor='gray.800'
+                                    w='xl'
+                                    h='sm'
+                                    justify='space-around'
+                                    align='flex-start'
+                                    px={4}
+                                    rounded='md'
+                                    hidden={multistep === item.multistepSelected ? false : true}
+                                >
+                                    <Stack spacing={6}>
+                                        <Heading fontSize='2xl'>
+                                            {item.title}
+                                        </Heading>
+                                        <FormControl>
+                                            <RadioGroup onClick={() => setProgressbar(item.id)}>
+                                                <Stack>
+                                                    {item.radios.map(res => {
+                                                        return (
+                                                            <Radio
+                                                                key={res.id}
+                                                                value={res.value}
+                                                                {...register(`${item.registerName}`)}
+                                                            >
+                                                                {res.alternative}
+                                                            </Radio>
+                                                        )
+                                                    })}
+                                                </Stack>
+                                            </RadioGroup>
+                                        </FormControl>
                                     </Stack>
-                                </RadioGroup>
-                            </FormControl>
-                        </Stack>
-                    </TabPanel>
-                    <TabPanel>
-                        <Stack spacing={6}>
-                            <Heading>
-                                Qual é o maior planeta do Sistema Solar?
-                            </Heading>
-                            <RadioGroup onClick={() => setProgressbar(progressBar > 66 ? progressBar : 66)}>
-                                <Stack>
-                                    <Radio value='1' {...register('response.2.answer')}>Terra</Radio>
-                                    <Radio value='2' {...register('response.2.answer')}>Marte</Radio>
-                                    <Radio value='10' {...register('response.2.answer')}>Júpiter</Radio>
-                                </Stack>
-                            </RadioGroup>
-                        </Stack>
-                    </TabPanel>
-                    <TabPanel>
-                        <Stack spacing={6}>
-                            <Heading>
-                                Qual é o animal considerado "o rei da selva"?
-                            </Heading>
-                            <RadioGroup onClick={() => setProgressbar(100)}>
-                                <Stack>
-                                    <Radio value='1' {...register('response.3.answer')}>Elefante</Radio>
-                                    <Radio value='10' {...register('response.3.answer')}>Leão</Radio>
-                                    <Radio value='2' {...register('response.3.answer')}>Tigre</Radio>
-                                </Stack>
-                            </RadioGroup>
-                        </Stack>
-                    </TabPanel>
-                </TabPanels>
-                <TabList mt={10} w='100%' alignItems='center' justifyContent='center'>
-                    <Tab color='pink.500'><Icon as={BsQuestionDiamondFill} /></Tab>
-                    <Tab color='pink.500'><Icon as={BsQuestionDiamondFill} /></Tab>
-                    <Tab color='pink.500'><Icon as={BsQuestionDiamondFill} /></Tab>
-                </TabList>
-                <Progress hasStripe value={progressBar} colorScheme="pink" mt={6} rounded='lg' bgColor='gray' />
-                <Stack>
-                    <Button
-                        mt={6}
-                        colorScheme="pink"
-                        type="submit"
-                        textTransform='uppercase'
-                        fontWeight='bold'
-                        isLoading={isLoadingButton}
-                        loadingText='Verificando suas respostas'
-                    >
-                        Finalizar Quiz
-                    </Button>
-                    <Button
-                        mt={40}
-                        variant='outline'
-                        onClick={SignOut}
-                        colorScheme="red"
-                        _hover={{opacity: '0.7'}}
-                    >
-                        Sair
-                    </Button>
-                </Stack>
-            </Tabs>
+                                    <IconButton
+                                        onClick={() => setmultistep(multistep + 1)}
+                                        aria-label="Next"
+                                        icon={<Icon as={MdOutlineNavigateNext} />}
+                                        w='fit-content'
+                                        alignSelf='center'
+                                        colorScheme="pink"
+                                        rounded='full'
+                                        hidden={item.multistepSelected === 3 ? true : false}
+                                    />
+                                    <IconButton
+                                        onClick={() => setmultistep(multistep - 1)}
+                                        aria-label="Back"
+                                        position='absolute'
+                                        top={2}
+                                        left={2}
+                                        variant='link'
+                                        icon={<Icon as={MdKeyboardBackspace} />}
+                                        fontSize='xl'
+                                        w='fit-content'
+                                        hidden={item.multistepSelected === 1 ? true : false}
+                                    />
+                                    <Button
+                                        w='100%'
+                                        colorScheme="pink"
+                                        type="submit"
+                                        textTransform='uppercase'
+                                        fontWeight='bold'
+                                        isLoading={isLoadingButton}
+                                        loadingText='Verificando suas respostas'
+                                        hidden={item.multistepSelected != 3 ? true : false}
+                                    >
+                                        Finalizar Quiz
+                                    </Button>
+                                </Flex>
+                            </motion.div>
+                        )}
+                    </>
+                )
+            })}
+            <Stack w='100%' maxW='xl' spacing={4}>
+                <Progress hasStripe value={progressBarState} colorScheme="pink" mt={6} rounded='lg' bgColor='gray' />
+                <Button
+                    variant='outline'
+                    onClick={SignOut}
+                    colorScheme="red"
+                    _hover={{ opacity: '0.7' }}
+                >
+                    Sair
+                </Button>
+            </Stack>
         </Flex>
     )
 }
